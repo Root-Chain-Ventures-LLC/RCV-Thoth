@@ -1,0 +1,67 @@
+# RCV Thoth — install compose.
+#
+# This file PULLS the published image (no `build:`), so it runs against a release
+# without a source tree. Set THOTH_VERSION in .env to a published tag (default
+# `latest`; pin a release like `0.1.0` for reproducibility).
+#
+# Thoth terminates TLS itself on this port and answers plain HTTP with a 301 —
+# except GET /api/health, which answers 200 in the clear so the healthcheck below
+# needs no certificate handling. There is no separate HTTP port to expose.
+
+name: thoth
+
+services:
+  thoth:
+    image: ghcr.io/root-chain-ventures-llc/thoth:${THOTH_VERSION:-latest}
+    container_name: thoth
+    restart: unless-stopped
+    ports:
+      - "${THOTH_PORT:-3000}:3000"
+    environment:
+      # Public URL people reach the app at. MUST be https:// — the server refuses
+      # to start otherwise. SSO redirect URIs and links in outgoing mail are built
+      # from this value, so it has to match the externally reachable URL.
+      BASE_URL: ${BASE_URL:?set BASE_URL in .env, e.g. https://contacts.example.com}
+
+      # Cookie signing key. Leave empty and the app generates one into /data and
+      # reuses it; set it explicitly so a restored volume does not sign everyone out.
+      SESSION_SECRET: ${SESSION_SECRET:-}
+
+      # Optional: create the first administrator at startup instead of using the
+      # setup page on first visit. Remove once the account exists.
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_NAME: ${ADMIN_NAME:-Administrator}
+
+      # "true" ONLY behind a reverse proxy that terminates TLS and sets
+      # X-Forwarded-Proto. It makes the app trust the forwarded protocol.
+      TRUST_PROXY: ${TRUST_PROXY:-false}
+
+      # Your own certificate instead of the self-signed pair generated into
+      # /data/tls. Mount the files in via the volume block below.
+      TLS_CERT: ${TLS_CERT:-}
+      TLS_KEY: ${TLS_KEY:-}
+      # Extra hostnames/IPs for the generated certificate (the BASE_URL host,
+      # localhost and 127.0.0.1 are always included).
+      TLS_SELF_SIGNED_HOSTS: ${TLS_SELF_SIGNED_HOSTS:-}
+
+      CALENDAR_SYNC_MINUTES: ${CALENDAR_SYNC_MINUTES:-30}
+    volumes:
+      # Database, uploads, TLS material and the generated session secret.
+      - thoth-data:/data
+      # Own certificate: uncomment, drop the PEMs in ./certs, and set
+      # TLS_CERT=/certs/fullchain.pem TLS_KEY=/certs/privkey.pem in .env
+      # - ./certs:/certs:ro
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  thoth-data:

@@ -1,0 +1,6 @@
+# install.sh writes a real .env with the session secret and the first-login admin
+# password. Never commit it.
+.env
+
+# Your own TLS material, if you mount it from ./certs (see docker-compose.yml).
+certs/
