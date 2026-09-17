@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thoth
+  labels:
+    app.kubernetes.io/name: thoth
+spec:
+  replicas: 1
+  # Never more than one pod on this volume: the database is SQLite and the PVC is
+  # ReadWriteOnce, so a RollingUpdate's overlap would put two writers on one file.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: thoth
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: thoth
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        # The image's data directory is owned by uid 1000; fsGroup makes a freshly
+        # provisioned volume writable by it.
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      # Only needed if the image is pulled from a private registry. See README.md.
+      # imagePullSecrets:
+      #   - name: ghcr
+      containers:
+        - name: thoth
+          # Pin a published release. Tags are listed under Releases and on the GHCR
+          # package page.
+          image: ghcr.io/root-chain-ventures-llc/thoth:0.1.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: https
+              containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: thoth
+            - secretRef:
+                name: thoth
+          env:
+            - name: DATA_DIR
+              value: /data
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+          # The app serves TLS on this port and redirects plain HTTP — except GET
+          # /api/health, which answers 200 in the clear so probes can stay plain HTTP.
+          startupProbe:
+            httpGet: { path: /api/health, port: https, scheme: HTTP }
+            periodSeconds: 3
+            # Generous: the first start generates a self-signed certificate and runs
+            # every migration on an empty database.
+            failureThreshold: 40
+          readinessProbe:
+            httpGet: { path: /api/health, port: https, scheme: HTTP }
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: { path: /api/health, port: https, scheme: HTTP }
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: thoth-data
+        - name: tmp
+          emptyDir: {}

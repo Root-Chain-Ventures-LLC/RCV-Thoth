@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: thoth
+  labels:
+    app.kubernetes.io/name: thoth
+data:
+  # Must be the public https:// URL. The server refuses to start on an http:// BASE_URL,
+  # and this is what SSO redirect URIs and links in outgoing mail are built from.
+  BASE_URL: "https://contacts.example.com"
+
+  # Leave false when the ingress re-encrypts to the pod (shape A in README.md).
+  # Set it to "true" only if the ingress talks plain HTTP to the pod, so the app trusts
+  # X-Forwarded-Proto instead of redirecting every request back to https.
+  TRUST_PROXY: "false"
+
+  CALENDAR_SYNC_MINUTES: "30"

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: thoth-data
+  labels:
+    app.kubernetes.io/name: thoth
+spec:
+  # ReadWriteOnce on purpose: this volume holds a SQLite database with exactly one writer.
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 10Gi
+  # storageClassName: ""   # uncomment and set if the cluster has no usable default
