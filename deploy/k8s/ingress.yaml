@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: thoth
+  labels:
+    app.kubernetes.io/name: thoth
+  annotations:
+    # Shape A (default): the ingress re-encrypts to the pod, which serves its own
+    # certificate, so nothing inside the cluster is in the clear. ingress-nginx does not
+    # verify the upstream certificate, which is what makes the pod's self-signed one fine.
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    # Contact photos and vCard/CSV imports go through this ingress.
+    nginx.ingress.kubernetes.io/proxy-body-size: "16m"
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [contacts.example.com]
+      secretName: thoth-tls
+  rules:
+    - host: contacts.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: thoth
+                port:
+                  name: https
