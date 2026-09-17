@@ -34,7 +34,7 @@ spec:
         - name: thoth
           # Pin a published release. Tags are listed under Releases and on the GHCR
           # package page.
-          image: ghcr.io/root-chain-ventures-llc/thoth:0.1.0
+          image: ghcr.io/root-chain-ventures-llc/thoth:0.1.1
           imagePullPolicy: IfNotPresent
           ports:
             - name: https

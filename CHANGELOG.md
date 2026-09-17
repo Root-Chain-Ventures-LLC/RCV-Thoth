@@ -4,9 +4,9 @@ Release notes for the published Thoth images. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2026-09-14
+## [0.1.1] - 2026-09-17
 
-First published release. `ghcr.io/root-chain-ventures-llc/thoth:0.1.0`
+First public release. `ghcr.io/root-chain-ventures-llc/thoth:0.1.1`
 
 ### Added
 
@@ -38,5 +38,6 @@ First published release. `ghcr.io/root-chain-ventures-llc/thoth:0.1.0`
 - **Branding** — instance name, logo and colour for white-labelling.
 - **Operations** — activity log, one-click SQLite backup, and a build stamp reported at
   Settings → Maintenance → *About this instance* and `GET /api/version`.
+- **Kubernetes manifests** in `deploy/k8s/`, and this install repository with `install.sh`.
 
-[0.1.0]: https://github.com/Root-Chain-Ventures-LLC/RCV-Thoth/releases/tag/v0.1.0
+[0.1.1]: https://github.com/Root-Chain-Ventures-LLC/RCV-Thoth/releases/tag/v0.1.1

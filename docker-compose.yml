@@ -2,7 +2,7 @@
 #
 # This file PULLS the published image (no `build:`), so it runs against a release
 # without a source tree. Set THOTH_VERSION in .env to a published tag (default
-# `latest`; pin a release like `0.1.0` for reproducibility).
+# `latest`; pin a release like `0.1.1` for reproducibility).
 #
 # Thoth terminates TLS itself on this port and answers plain HTTP with a 301 —
 # except GET /api/health, which answers 200 in the clear so the healthcheck below
